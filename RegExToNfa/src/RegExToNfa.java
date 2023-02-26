@@ -274,9 +274,7 @@ public class RegExToNfa {
                 }
 			}
 		}
-		
-		
-		//Collections.sort(tArray);
+
 		for (int i=0; i<tArray.size(); i++) {
 			T += ";" + tArray.get(i);
 		}
@@ -285,12 +283,5 @@ public class RegExToNfa {
 		return Q+"#"+A+"#"+T+"#"+I+"#"+F;
 	}
 
-	public static void main(String[] args) {
-
-		
-		
-		System.out.println(new RegExToNfa("a;b#eab*|.a.*"));
-
-	}
 
 }
