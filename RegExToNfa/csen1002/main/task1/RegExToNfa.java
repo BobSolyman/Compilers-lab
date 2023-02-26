@@ -73,7 +73,7 @@ class Neighbor {
 
 public class RegExToNfa {
 
-	NFA Nfa = new NFA();
+	static NFA Nfa = new NFA();
 	
 	
 	String Q="";
@@ -239,18 +239,14 @@ public class RegExToNfa {
 	}
 	
 	public static void main(String[] args) {
-		int c = 0;
-		Node firstNode = new Node(c++);
-		Node secondNode = new Node(c++);
 		
-		firstNode.addPointer(secondNode.name, 'e');
-		
-		NFA result = new NFA();
-		result.addNodes(firstNode);
-		result.addNodes(secondNode);
-		
-		
-	
+		RegExToNfa r = new RegExToNfa("a;b#ab|");
+		for(int i=0; i<r.Nfa.nodes.size(); i++) {
+			System.out.println(r.Nfa.nodes.get(i).name);
+			for(int j=0; j<r.Nfa.nodes.get(i).pointers.size(); j++) {
+				System.out.println("--"+r.Nfa.nodes.get(i).pointers.get(j).alphabet+"-->"+r.Nfa.nodes.get(i).pointers.get(j).name);
+			}
+		}
 		
 	}
 
