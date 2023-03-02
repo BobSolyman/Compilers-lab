@@ -1,5 +1,6 @@
 package csen1002.main.task2;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -43,10 +44,16 @@ public class NfaToDfa {
 	int startStateNFA;
 	ArrayList<String> grammer;
 	
-	Queue<String> statesQueue;
+	Queue<Set<Integer>> statesQueue;
 	ArrayList<String> statesArray;
 	
 	ArrayList<transfer> transfers;
+
+	String Q="";
+	String A="";
+	String T="";
+	String I="";
+	String F="";
 	
 	
 	public void getEClosure(String states, String transitions){
@@ -132,13 +139,10 @@ public class NfaToDfa {
 				
 				if(!statesArray.contains(setToString(eclosedTargets))) {
 					statesArray.add(setToString(eclosedTargets));
-					statesQueue.add(setToString(eclosedTargets));
+					statesQueue.add(eclosedTargets);
 				}
 			}
 		}
-		
-		
-		
 	}
 	
 	public String setToString(Set<Integer> input) {
@@ -156,7 +160,26 @@ public class NfaToDfa {
 		return result;
 	}
 
+	public void handleDeadState() {
+		Q = "-1;"+Q;
+		
+		String temp = "";
+		for(int i=0; i<grammer.size(); i++) {
+			temp = temp + "-1,"+grammer.get(i)+",-1;";
+		}
+		
+		T = temp + T;
+	}
+	
+	public void getAcceptStates() {
+		
+	}
+	
+	
 	public NfaToDfa(String input) {
+		
+		statesArray = new ArrayList<>();
+		statesQueue = new ArrayDeque<>();
 		
 		transfers = new ArrayList<transfer>();
 		
@@ -164,14 +187,31 @@ public class NfaToDfa {
 
 		startStateNFA = Integer.parseInt(arrayInput[3]);
 		acceptStateNFA = Integer.parseInt(arrayInput[4]);
-		grammer = new ArrayList<String>(Arrays.asList(arrayInput[1].split(";")));
+		A = arrayInput[1];
+		grammer = new ArrayList<String>(Arrays.asList(A.split(";")));
 		
 		getEClosure(arrayInput[0], arrayInput[2]);
 		
+		Set<Integer> newStartState = eclosures.get(startStateNFA);
+		I = setToString(newStartState); 
+		statesArray.add(I);
+		
+		createTransitions(newStartState, arrayInput[2].split(";"));
+		
+		while(!statesQueue.isEmpty())
+		{
+			createTransitions(statesQueue.poll(), arrayInput[2].split(";"));
+		}
 		
 		
 		
 		
+		
+		
+		
+		if(createdDeadState) {
+			handleDeadState();
+		}
 	}
 
 	/**
@@ -180,29 +220,17 @@ public class NfaToDfa {
 	 */
 	@Override
 	public String toString() {
-		// TODO Auto-generated method stub
-		return null;
+		return Q+"#"+A+"#"+T+"#"+I+"#"+F;
 	}
 
 	public static void main(String[] args) {
-		Set<Integer> x= new HashSet<>();
-		Set<Integer> y= new HashSet<>();
-		x.add(3);
-		x.add(1);
-		x.add(12);
-		
-		ArrayList<Integer> c = new ArrayList<>();
-		c.addAll(x);
-		
-		//Hashtable<Integer, Set<Integer>> A = getEClosure("1;2;3;4;5;6;7;8;9;10", "1,b,2;2,e,3;3,e,4;3,e,9;4,e,5;4,e,7;5,a,6;6,e,4;6,e,9;7,b,8;8,e,4;8,e,9;9,a,10");
-		Collections.sort(c);
-		String v = "";
-		for(int i=0; i<c.size(); i++) {
-			v += c.get(i)+"/";
-			System.out.println(c.get(i));
-		}
-		v=v.substring(0, v.length() - 1); 
-		System.out.println(v);
+		NfaToDfa x = new NfaToDfa("0;1;2;3;4;5;6;7;8;9;10#a;b#0,e,1;1,b,2;2,e,3;3,e,4;3,e,9;4,e,5;4,e,7;5,a,6;6,e,4;6,e,9;7,b,8;8,e,4;8,e,9;9,a,10#0#10");
+
+		System.out.println(x.Q);
+		System.out.println(x.A);
+		System.out.println(x.T);
+		System.out.println(x.I);
+		System.out.println(x.F);
 	}
 	
 	
