@@ -20,34 +20,20 @@ import java.util.Set;
  * @labNumber 12
  */
 
-class transfer{
-	Set<Integer> source;
-	String alphabet;
-	Set<Integer> target;
-	
-	public transfer(Set<Integer> source, String alphabet, Set<Integer> target) {
-		this.source = source;
-		this.alphabet = alphabet;
-		this.target = target;
-	}
-}
-
-
-
 public class NfaToDfa {
 	
 	Hashtable<Integer, Set<Integer>> eclosures;
 	
 	boolean createdDeadState = false;
 	
-	int acceptStateNFA;
+	ArrayList<String> acceptStatesNFA;
 	int startStateNFA;
 	ArrayList<String> grammer;
 	
-	Queue<Set<Integer>> statesQueue;
-	ArrayList<String> statesArray;
+	Queue<Set<Integer>> statesQueue = new ArrayDeque<>();
+	ArrayList<String> 	statesArray = new ArrayList<>();
 	
-	ArrayList<transfer> transfers;
+	ArrayList<String> transfers = new ArrayList<String>();
 
 	String Q="";
 	String A="";
@@ -104,6 +90,7 @@ public class NfaToDfa {
 		
 		ArrayList<String> currentTransitions = new ArrayList<String>();
 		
+		//collection all the alphabet+e transitions from this state
 		Iterator<Integer> itr = states.iterator();
 		while(itr.hasNext()) {
 			int state = itr.next();
@@ -111,15 +98,17 @@ public class NfaToDfa {
 				if(state==Integer.parseInt(transition[i].split(",")[0])) {
 					currentTransitions.add(transition[i]);
 				}
+				//optimization step
 				if(state<Integer.parseInt(transition[i].split(",")[0]))
 					break;
 			}
 		}
 		
+		
 		for(String alphabet : grammer) {
 			Set<Integer> eclosedTargets = new HashSet<Integer>();
 			for(String stateTransition : currentTransitions ) {
-				if(stateTransition.split(",")[0].equals(alphabet)) {
+				if(stateTransition.split(",")[1].equals(alphabet)) {
 					int target = Integer.parseInt(stateTransition.split(",")[2]);
 					eclosedTargets.addAll(eclosures.get(target));
 				}
@@ -128,15 +117,12 @@ public class NfaToDfa {
 				createdDeadState = true;
 				Set<Integer> deadState = new HashSet<Integer>();
 				deadState.add(-1);
-				transfer t = new transfer(states, alphabet, deadState);
-				transfers.add(t);
+				transfers.add(setToString(states)+","+ alphabet +","+ setToString(deadState));
 			}
 			else {
-				transfer t = new transfer(states, alphabet, eclosedTargets);
-				transfers.add(t);
+				transfers.add(setToString(states)+","+ alphabet +","+ setToString(eclosedTargets));
 				
-				// queue and array to handle new state
-				
+				// add to queue and array to handle new state
 				if(!statesArray.contains(setToString(eclosedTargets))) {
 					statesArray.add(setToString(eclosedTargets));
 					statesQueue.add(eclosedTargets);
@@ -173,20 +159,79 @@ public class NfaToDfa {
 	
 	public void getAcceptStates() {
 		
+		for(String state : statesArray) {
+			for(String stateEntry: state.split("/")) {
+				if(acceptStatesNFA.contains(stateEntry)) {
+					F += ";" + state;
+					break;
+				}
+			}
+		}
+		
+		F = F.substring(1);
+		
+	}
+
+	public int compareStates(String state1, String state2) {
+		
+		String[] arr1 = state1.split("/");
+		String[] arr2 = state2.split("/");
+		
+		if(arr1.length<arr2.length) {
+			for(int i=0; i<arr1.length; i++) {
+				if(Integer.parseInt(arr1[i])>Integer.parseInt(arr2[i]))
+					return 1;
+				if(Integer.parseInt(arr1[i])<Integer.parseInt(arr2[i]))
+					return -1;
+			}
+			return 1;
+		}
+		if(arr1.length>arr2.length) {
+			for(int i=0; i<arr2.length; i++) {
+				if(Integer.parseInt(arr1[i])>Integer.parseInt(arr2[i]))
+					return 1;
+				if(Integer.parseInt(arr1[i])<Integer.parseInt(arr2[i]))
+					return -1;
+			}
+			return -1;
+		}
+		
+		for(int i=0; i<arr1.length; i++) {
+			if(Integer.parseInt(arr1[i])>Integer.parseInt(arr2[i]))
+				return 1;
+			if(Integer.parseInt(arr1[i])<Integer.parseInt(arr2[i]))
+				return -1;
+		}
+		
+		return 0;
 	}
 	
+	public int compareTransfers(String transfer1, String transfer2) {
+		
+		String[] arr1 = transfer1.split(",");
+		String[] arr2 = transfer2.split(",");
+		int comparison = compareStates(arr1[0], arr2[0]);
+		
+		if(comparison!=0){
+			return comparison;
+		}
+		
+		comparison = arr1[1].compareTo(arr2[1]);
+		
+		if(comparison!=0){
+			return comparison;
+		}
+		
+		return compareStates(arr1[2], arr2[2]);
+		
+	}
 	
 	public NfaToDfa(String input) {
-		
-		statesArray = new ArrayList<>();
-		statesQueue = new ArrayDeque<>();
-		
-		transfers = new ArrayList<transfer>();
 		
 		String[] arrayInput = input.split("#");
 
 		startStateNFA = Integer.parseInt(arrayInput[3]);
-		acceptStateNFA = Integer.parseInt(arrayInput[4]);
+		acceptStatesNFA = new ArrayList<String>(Arrays.asList(arrayInput[4].split(";")));
 		A = arrayInput[1];
 		grammer = new ArrayList<String>(Arrays.asList(A.split(";")));
 		
@@ -194,7 +239,7 @@ public class NfaToDfa {
 		
 		Set<Integer> newStartState = eclosures.get(startStateNFA);
 		I = setToString(newStartState); 
-		statesArray.add(I);
+		statesArray.add(I);		
 		
 		createTransitions(newStartState, arrayInput[2].split(";"));
 		
@@ -203,34 +248,58 @@ public class NfaToDfa {
 			createTransitions(statesQueue.poll(), arrayInput[2].split(";"));
 		}
 		
+        for (int i = 0; i < statesArray.size(); i++) {
+            for (int j = i + 1; j < statesArray.size(); j++) {
+                String temp = "";
+                if (compareStates(statesArray.get(i), statesArray.get(j))==1) {
+                    temp = statesArray.get(i);
+                    statesArray.set(i, statesArray.get(j));
+                    statesArray.set(j, temp);
+                }
+            }
+        }
+		
+        for (int i = 0; i < statesArray.size(); i++) {
+        	Q += ";" + statesArray.get(i);
+        }
+        Q = Q.substring(1);
+        
+        
+        for (int i = 0; i < transfers.size(); i++) {
+            for (int j = i + 1; j < transfers.size(); j++) {
+                String temp = "";
+                if (compareTransfers(transfers.get(i), transfers.get(j))==1) {
+                    temp = transfers.get(i);
+                    transfers.set(i, transfers.get(j));
+                    transfers.set(j, temp);
+                }
+            }
+        }
+        
+        for (int i = 0; i < transfers.size(); i++) {
+        	T += ";" + transfers.get(i);
+        }
+        T = T.substring(1);
 		
 		
-		
-		
-		
+		getAcceptStates();
 		
 		if(createdDeadState) {
 			handleDeadState();
 		}
 	}
 
-	/**
-	 * @return Returns a formatted string representation of the DFA. The string
-	 *         representation follows the one in the task description
-	 */
 	@Override
 	public String toString() {
 		return Q+"#"+A+"#"+T+"#"+I+"#"+F;
 	}
 
 	public static void main(String[] args) {
-		NfaToDfa x = new NfaToDfa("0;1;2;3;4;5;6;7;8;9;10#a;b#0,e,1;1,b,2;2,e,3;3,e,4;3,e,9;4,e,5;4,e,7;5,a,6;6,e,4;6,e,9;7,b,8;8,e,4;8,e,9;9,a,10#0#10");
+		NfaToDfa nfaToDfa= new NfaToDfa("0;1;2;3;4;5;6;7;8;9;10;11;12#c;d;i;n#0,i,1;1,e,8;1,e,10;2,c,3;3,e,9;4,n,5;5,e,4;5,e,7;6,e,4;6,e,7;7,e,9;8,e,2;8,e,6;9,e,12;10,d,11;11,e,12#0#12");
 
-		System.out.println(x.Q);
-		System.out.println(x.A);
-		System.out.println(x.T);
-		System.out.println(x.I);
-		System.out.println(x.F);
+		System.out.println(nfaToDfa);
+
+
 	}
 	
 	
