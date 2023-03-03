@@ -48,6 +48,7 @@ public class NfaToDfa {
 
 		String[] statesArray = states.split(";");
 		
+		//initialising each state with itself
 		for(int i=0; i<statesArray.length; i++) {
 			int tempKey = Integer.parseInt(statesArray[i]);
 			Set<Integer> tempVal = new HashSet<Integer>();
@@ -57,6 +58,7 @@ public class NfaToDfa {
 		
 		String[] transitionsArray = transitions.split(";");
 		
+		//adding direct e transitions only
 		for(int i=0; i<transitionsArray.length; i++) {
 			if(transitionsArray[i].split(",")[1].equals("e")) {
 				int tempKey = Integer.parseInt(transitionsArray[i].split(",")[0]);
@@ -66,23 +68,31 @@ public class NfaToDfa {
 			}
 		}
 		
-		Enumeration<Integer> e = eclosures.keys();
 		
-		while(e.hasMoreElements()) {
-			int tempKey = e.nextElement(); //3
-			Set<Integer> tempSet = eclosures.get(tempKey); //3,4,9
-			Set<Integer> newSet = new HashSet<Integer>();
-			newSet.addAll(tempSet); //3,4,9
-			Iterator<Integer> itr = tempSet.iterator();
-			while(itr.hasNext()){
-				int tempVal = itr.next(); 
-				if(tempVal!=tempKey) {
-					Set<Integer> eclosedSet = eclosures.get(tempVal); //4,5,7
-					newSet.addAll(eclosedSet); //3,4,5,7,9
+		String changeDetector = "";
+		
+		while(!changeDetector.equals(eclosures.toString())) {
+			
+			Enumeration<Integer> e = eclosures.keys();
+			
+			changeDetector = eclosures.toString();
+			
+			while(e.hasMoreElements()) {
+				int tempKey = e.nextElement(); //3
+				Set<Integer> tempSet = eclosures.get(tempKey); //3,4,9
+				Set<Integer> newSet = new HashSet<Integer>();
+				newSet.addAll(tempSet); //3,4,9
+				Iterator<Integer> itr = tempSet.iterator();
+				while(itr.hasNext()){
+					int tempVal = itr.next(); 
+					if(tempVal!=tempKey) {
+						Set<Integer> eclosedSet = eclosures.get(tempVal); //4,5,7
+						newSet.addAll(eclosedSet); //3,4,5,7,9
+					}
 				}
+				eclosures.put(tempKey, newSet);
 			}
-			eclosures.put(tempKey, newSet);
-
+		
 		}
 	}
 	
@@ -184,7 +194,7 @@ public class NfaToDfa {
 				if(Integer.parseInt(arr1[i])<Integer.parseInt(arr2[i]))
 					return -1;
 			}
-			return 1;
+			return -1;
 		}
 		if(arr1.length>arr2.length) {
 			for(int i=0; i<arr2.length; i++) {
@@ -193,7 +203,7 @@ public class NfaToDfa {
 				if(Integer.parseInt(arr1[i])<Integer.parseInt(arr2[i]))
 					return -1;
 			}
-			return -1;
+			return 1;
 		}
 		
 		for(int i=0; i<arr1.length; i++) {
@@ -294,13 +304,5 @@ public class NfaToDfa {
 		return Q+"#"+A+"#"+T+"#"+I+"#"+F;
 	}
 
-	public static void main(String[] args) {
-		NfaToDfa nfaToDfa= new NfaToDfa("0;1;2;3;4;5;6;7;8;9;10;11;12#c;d;i;n#0,i,1;1,e,8;1,e,10;2,c,3;3,e,9;4,n,5;5,e,4;5,e,7;6,e,4;6,e,7;7,e,9;8,e,2;8,e,6;9,e,12;10,d,11;11,e,12#0#12");
-
-		System.out.println(nfaToDfa);
-
-
-	}
-	
 	
 }
