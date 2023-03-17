@@ -274,7 +274,9 @@ public class RegExToNfa {
                 }
 			}
 		}
-
+		
+		
+		//Collections.sort(tArray);
 		for (int i=0; i<tArray.size(); i++) {
 			T += ";" + tArray.get(i);
 		}
@@ -282,6 +284,5 @@ public class RegExToNfa {
 
 		return Q+"#"+A+"#"+T+"#"+I+"#"+F;
 	}
-
 
 }

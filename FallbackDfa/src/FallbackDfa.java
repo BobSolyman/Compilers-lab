@@ -1,7 +1,6 @@
 package csen1002.main.task3;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.Stack;
 
 /**
@@ -44,7 +43,6 @@ public class FallbackDfa {
 		boolean foundAcceptState = false;
 		Stack<Integer> cloneStack = new Stack<>();
 		cloneStack.addAll(readings);
-		int cloneL = armL;
 		while(armL>=armR) {
 			if(acceptStates.contains(currentState)){
 				foundAcceptState = true;

@@ -3,7 +3,6 @@ package csen1002.main.task2;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -27,7 +26,6 @@ public class NfaToDfa {
 	boolean createdDeadState = false;
 	
 	ArrayList<String> acceptStatesNFA;
-	int startStateNFA;
 	ArrayList<String> grammer;
 	
 	Queue<Set<Integer>> statesQueue = new ArrayDeque<>();
@@ -240,14 +238,13 @@ public class NfaToDfa {
 		
 		String[] arrayInput = input.split("#");
 
-		startStateNFA = Integer.parseInt(arrayInput[3]);
 		acceptStatesNFA = new ArrayList<String>(Arrays.asList(arrayInput[4].split(";")));
 		A = arrayInput[1];
 		grammer = new ArrayList<String>(Arrays.asList(A.split(";")));
 		
 		getEClosure(arrayInput[0], arrayInput[2]);
 		
-		Set<Integer> newStartState = eclosures.get(startStateNFA);
+		Set<Integer> newStartState = eclosures.get(Integer.parseInt(arrayInput[3]));
 		I = setToString(newStartState); 
 		statesArray.add(I);		
 		
@@ -303,6 +300,5 @@ public class NfaToDfa {
 	public String toString() {
 		return Q+"#"+A+"#"+T+"#"+I+"#"+F;
 	}
-
 	
 }
