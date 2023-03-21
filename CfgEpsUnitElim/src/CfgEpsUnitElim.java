@@ -21,7 +21,7 @@ public class CfgEpsUnitElim {
 
 	//constructor attributes
 	HashMap<String, TreeSet<String>> rules;
-	String[] ruleHeads;
+	ArrayList<String> ruleHeads;
 	String ruleHeadValue;
 	String alphabets;
 	
@@ -29,11 +29,11 @@ public class CfgEpsUnitElim {
 	ArrayList<String> hadEpsilon;
 	Set<String> literalAlterations;
 	
-	
 	public CfgEpsUnitElim(String cfg) {
 		String[] input = cfg.split("#");
 		ruleHeadValue = input[0];
-		ruleHeads = ruleHeadValue.split(";");
+		ruleHeads = new ArrayList<>();
+		ruleHeads.addAll(Arrays.asList(ruleHeadValue.split(";")));
 		alphabets = input[1];
 		rules = new HashMap<>();
 		for(String rule : input[2].split(";")) {
@@ -54,7 +54,7 @@ public class CfgEpsUnitElim {
 		
 		for(String key: ruleHeads) {
 			ruleString+=key+"/";
-			TreeSet tempValue = rules.get(key);
+			TreeSet<String> tempValue = rules.get(key);
 			Iterator<String> itr = tempValue.iterator();
 			while(itr.hasNext()) {
 				ruleString+=itr.next()+",";
@@ -74,7 +74,7 @@ public class CfgEpsUnitElim {
 		while(!outOfEpsilons(rules.values())) {
 			
 			for(String key: ruleHeads) {
-				TreeSet tempValue = rules.get(key);
+				TreeSet<String> tempValue = rules.get(key);
 				if(tempValue.contains("e")) {
 					hadEpsilon.add(key);
 					tempValue.remove("e");
@@ -83,7 +83,7 @@ public class CfgEpsUnitElim {
 					//edit other rules with this change
 					for(String newKey: ruleHeads) {
 						literalAlterations = new HashSet<>();
-						TreeSet newTempValue = rules.get(newKey);
+						TreeSet<String> newTempValue = rules.get(newKey);
 						
 						Iterator<String> itr = newTempValue.iterator();
 						while(itr.hasNext()) {
@@ -125,7 +125,26 @@ public class CfgEpsUnitElim {
 	 * Eliminates Unit Rules from the grammar
 	 */
 	public void eliminateUnitRules() {
-		// TODO Auto-generated method stub
+		String prevRules = "";
+		while(!prevRules.equals(rules.toString())) {
+			prevRules = rules.toString();
+			for(String key: ruleHeads) {
+				TreeSet<String> tempValue = rules.get(key);
+				TreeSet<String> iterationValues = new TreeSet<>();
+				iterationValues.addAll(tempValue);
+				Iterator<String> itr = iterationValues.iterator();
+				while(itr.hasNext()) {
+					String literal = itr.next();
+					if(ruleHeads.contains(literal)) {
+						tempValue.remove(literal);
+						if(!literal.equals(key)) {
+							TreeSet<String> newTempValue = rules.get(literal);
+							tempValue.addAll(newTempValue);
+						}
+					}
+				}
+				rules.put(key, tempValue);
+			}
+		}
 	}
-
 }
