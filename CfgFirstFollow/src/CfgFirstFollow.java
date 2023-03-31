@@ -25,6 +25,8 @@ public class CfgFirstFollow {
 	TreeSet<String> currentFirsts;
 	
 	//follow attributes
+	HashMap<String, TreeSet<String>> followRules;
+	TreeSet<String> currentFollow;
 	
 	
 	public CfgFirstFollow(String cfg) {
@@ -128,10 +130,86 @@ public class CfgFirstFollow {
 	 *         formatted as specified in the task description.
 	 */
 	public String follow() {
+		this.first();
 		
+		followRules = new HashMap<>();
 		
+		for(int i=0; i<ruleHeads.size(); i++) {
+			TreeSet<String> temp = new TreeSet<String>();
+			if(i==0)
+				temp.add("$");
+			followRules.put(ruleHeads.get(i), temp);
+		}
 		
+		boolean added = true;
 		
-		return null;
+		while(added) {
+			added = false;
+		
+			for(String head : ruleHeads) {
+				for(String otherHead : ruleHeads) {
+					ArrayList<String> tempV = rules.get(otherHead);
+					for(String value : tempV) {
+						if(value.contains(head)) {
+							currentFollow = new TreeSet<String>(); 
+							currentFollow.addAll(followRules.get(head));
+							followHelper(head, otherHead, value);
+							if(!currentFollow.toString().equals(followRules.get(head).toString())) {
+								added = true;
+								followRules.put(head, currentFollow);
+							}
+						}
+					}
+				}
+			}
+		
+		}
+		
+		String result = "";
+		for(String head : ruleHeads) {
+			result+=";"+head+"/";
+			TreeSet<String> tempV = followRules.get(head);
+			for(String value : tempV) {
+				result+=value;
+			}
+		}
+		
+		return result.substring(1);
+	}
+	
+	public void followHelper(String head, String otherHead, String value) {
+
+		for(int index=0; index<value.length(); index++) {
+			if(value.charAt(index)==head.charAt(0)) {
+				if(index==value.length()-1) {
+					currentFollow.addAll(followRules.get(otherHead));
+				}
+				else {
+					boolean ended = false;
+					for(int i=index+1; i<value.length(); i++) {
+						if(ruleHeads.contains(value.charAt(i)+"")) {
+							TreeSet<String> nextValueFirsts = new TreeSet<>();
+							nextValueFirsts.addAll(firstRules.get(value.charAt(i)+""));
+							if(nextValueFirsts.contains("e")) {
+								nextValueFirsts.remove("e");
+								currentFollow.addAll(nextValueFirsts);
+							}
+							else {
+								currentFollow.addAll(nextValueFirsts);
+								ended = true;
+								break;
+							}
+						}
+						else {
+							currentFollow.add(value.charAt(i)+"");
+							ended = true;
+							break;
+						}
+					}
+					if(!ended)
+						currentFollow.addAll(followRules.get(otherHead));
+				}
+			}
+		}
 	}
 }
